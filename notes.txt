@@ -1,0 +1,70 @@
+Notes to remind me of important acronyms and concepts for learning embedded AVR.
+
+--------
+ISR
+--------
+Definition: Interrupt Service Routine — runs automatically when a hardware interrupt occurs.
+Use Case: Handle events like timer overflows, pin changes, or UART reception without polling.
+
+------------------------
+Bit Math Operators
+------------------------
+<<  : left shift (1 << 3 = 0b00001000)
+>>  : right shift
+|   : bitwise OR (set bits)
+&   : bitwise AND (check bits)
+^   : bitwise XOR (toggle bits)
+~   : bitwise NOT (invert bits)
+
+Use Case: Manipulate individual bits in hardware registers.
+
+Example:
+PORTD |= (1 << PD6);   // set PD6 high
+PORTD ^= (1 << PD6);   // toggle PD6
+
+------------------------
+DDRx (DDRB, DDRD, etc.)
+------------------------
+Definition: Data Direction Register — sets pins as input (0) or output (1)
+Use Case: Configure microcontroller pins for input/output
+
+Example:
+DDRB |= (1 << PB1);   // set PB1 as output
+DDRD &= ~(1 << PD2);  // set PD2 as input
+
+
+------------------------
+TCCR (Timer/Counter Control Register)
+------------------------
+Definition: Configures timer/counter behavior
+Registers:
+    TCCR0A, TCCR0B, TCCR1A, TCCR1B, TCCR2A, TCCR2B (last three letters are the register)
+Key bits:
+    COM1A0, COM1A1 : Compare Output Mode (toggle/clear/set OC1A pin)
+    CS10, CS11, CS12 : Clock Select (prescaler)
+Use Case: Setup timers for blinking LEDs, PWM, delays
+
+Example:
+TCCR1A |= (1 << COM1A0); // toggle OC1A on compare match
+TCCR1B |= (1 << CS10) | (1 << CS12); // set prescaler
+
+------------------------
+sei()
+------------------------
+Definition: Set Interrupt Enable — enables global interrupts
+Use Case: Must be called after configuring interrupts
+
+Example:
+sei();  // enable all interrupts
+
+------------------------
+_BV(bit)
+------------------------
+Definition: Macro to convert bit number to without effecting other bits/bytes (bitmask)
+
+_BV(bit) = (1 << bit)
+Use Case: Simplifies bit manipulation
+
+Example:
+PORTD ^= _BV(PORTD6); // toggle PD6
+
