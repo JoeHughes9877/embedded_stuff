@@ -4,6 +4,11 @@
 volatile uint8_t blink_counter_T0 = 0;
 volatile uint8_t blink_counter_T2 = 0;
 
+#define OK 0
+#define ERR 1
+
+short init_GPIO(volatile uint8_t* ddr, uint8_t pin);
+
 ISR (TIMER0_OVF_vect) {
   blink_counter_T0++;
 
@@ -24,9 +29,9 @@ ISR (TIMER2_OVF_vect) {
 
 int main(void) {
 
-  DDRD |= (1 << PD6);    // Pin for Timer 0 (OC0A)
-  DDRB |= (1 << PB1);    // Pin for Timer 1 (OC1A)
-  DDRB |= (1 << PB3);    // Pin for Timer 2 (OC2A)
+  init_GPIO(&DDRD, PD6); // Pin for Timer 0 (OC0A) 
+  init_GPIO(&DDRB, PB1); // Pin for Timer 1 (OC1A)  
+  init_GPIO(&DDRB, PB3); // Pin for Timer 2 (OC2A)
 
   //making timer control register same as the compare output mode
   TCCR1A |= (1 << COM1A0); 
@@ -55,4 +60,14 @@ int main(void) {
     }
 
   return 0;
+}
+
+short init_GPIO(volatile uint8_t* ddr, uint8_t pin) {
+  //*ddr allows for both B and D pins to be processed via pointer
+  *ddr |= (1 << pin);
+  if ((*ddr & (1 << pin)) != 0) {
+    return OK;
+  }else {
+    return ERR;
+  }
 }
