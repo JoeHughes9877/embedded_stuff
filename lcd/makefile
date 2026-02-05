@@ -4,36 +4,41 @@ MCU = atmega328p
 # CPU frequency
 F_CPU = 16000000UL
 
-# Compiler and tools
+# Tools
 CC = avr-gcc
 OBJCOPY = avr-objcopy
 AVRDUDE = avrdude
+
+# Upload settings
 PORT = /dev/ttyUSB0
 BAUD = 115200
+PROGRAMMER = arduino
 
-# Source and output
-SRC = blink.c
-ELF = blink.elf
-HEX = blink.hex
+# Files
+SRC = lcd.c
+ELF = lcd.elf
+HEX = lcd.hex
 
-# Compiler flags
+# Flags
 CFLAGS = -mmcu=$(MCU) -DF_CPU=$(F_CPU) -Os -Wall
+LDFLAGS = -mmcu=$(MCU)
 
-# Default: build everything
+# Default target
 all: $(HEX)
 
-# Compile C into ELF
+# Compile
 $(ELF): $(SRC)
-	$(CC) $(CFLAGS) -o $@ $<
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
 
-# Convert ELF to HEX
+# Convert to HEX
 $(HEX): $(ELF)
 	$(OBJCOPY) -O ihex $< $@
 
-# Flash the HEX to the board
+# Flash
 flash: $(HEX)
-	$(AVRDUDE) -c arduino -p $(MCU) -P $(PORT) -b $(BAUD) -U flash:w:$<
+	$(AVRDUDE) -c $(PROGRAMMER) -p $(MCU) -P $(PORT) -b $(BAUD) \
+	-U flash:w:$<:i
 
-# Clean build files
+# Clean
 clean:
 	rm -f $(ELF) $(HEX)
