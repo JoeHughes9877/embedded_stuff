@@ -9,6 +9,9 @@ void init_4_bit_lcd();
 void return_home();
 void entry_mode_set();
 void Display_on_off_control();
+void lcd_write_char(char letter);
+void lcd_newline();
+void lcd_write_char(char letter);
 
 #define OK 0
 #define ERR 1
@@ -33,8 +36,16 @@ int main(void) {
     entry_mode_set();
     Display_on_off_control();
 
+    lcd_write_char('K');
+    lcd_write_char('I');
+    lcd_write_char('C');
+    lcd_write_char('R');
+    lcd_write_char('U');
+    lcd_write_char('F');
+    lcd_write_char('T');
+
     while (1) {
-        //TODO
+        //Empty...
     }
 
     return 0;
@@ -175,3 +186,15 @@ short init_GPIO(volatile uint8_t* ddr, uint8_t pin) {
         return ERR;
     }
 } 
+
+void lcd_write_char(char letter) {
+    PORTD |= (1 << PD4);
+
+    PORTB = (PORTB & 0xF0) | ((letter >> 4) & 0x0F);
+    lcd_trigger();
+
+    PORTB = (PORTB & 0xF0) | (letter & 0x0F);
+    lcd_trigger();
+
+    _delay_us(50); /
+}
