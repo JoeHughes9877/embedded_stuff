@@ -12,6 +12,7 @@ void Display_on_off_control();
 void lcd_write_char(char letter);
 void lcd_newline();
 void lcd_write_char(char letter);
+void lcd_shift_right();
 
 #define OK 0
 #define ERR 1
@@ -36,16 +37,27 @@ int main(void) {
     entry_mode_set();
     Display_on_off_control();
 
-    lcd_write_char('K');
-    lcd_write_char('I');
-    lcd_write_char('C');
-    lcd_write_char('R');
-    lcd_write_char('U');
-    lcd_write_char('F');
-    lcd_write_char('T');
+    for (int i = 0; i < 3; i++) {
+        lcd_write_char('H');
+        lcd_write_char('e');
+        lcd_write_char('l');
+        lcd_write_char('l');
+        lcd_write_char('o');
+        lcd_write_char(' ');
+        lcd_write_char('W');
+        lcd_write_char('o');
+        lcd_write_char('r');
+        lcd_write_char('l');
+        lcd_write_char('d');
+        lcd_write_char('!');
+        lcd_write_char(' ');
+    }
+    lcd_write_char(' '); 
+
 
     while (1) {
-        //Empty...
+        lcd_shift_right();
+        _delay_ms(500); 
     }
 
     return 0;
@@ -59,18 +71,10 @@ void clear_display() {
     //RW is plugged into gnd so no need to set to 0 
 
     //DB7 TO db 4 also set to 0 (0-3 can be ignored as i am in 4 bit mode)
-    PORTB &= ~(1 << PB0);
-    PORTB &= ~(1 << PB1);
-    PORTB &= ~(1 << PB2);
-    PORTB &= ~(1 << PB3);
-
+    PORTB = PORTB & 0xF0;
     lcd_trigger();
 
-    PORTB |= (1 << PB0);
-    PORTB &= ~(1 << PB1);
-    PORTB &= ~(1 << PB2);
-    PORTB &= ~(1 << PB3);
-
+    PORTB = (PORTB & 0xF0) | 0x01;
     lcd_trigger();
 }
 
@@ -79,24 +83,14 @@ void return_home() {
 
     //RW is wired to gnd 
 
-    PORTB &= ~(1 << PB0);
-    PORTB &= ~(1 << PB1);
-    PORTB &= ~(1 << PB2);
-    PORTB &= ~(1 << PB3);
+    PORTB = PORTB & 0xF0;
 
     lcd_trigger();
 
     //clean up all the pins
-    PORTB &= ~(1 << PB0);
-    PORTB &= ~(1 << PB1);
-    PORTB &= ~(1 << PB2);
-    PORTB &= ~(1 << PB3);
-
-    
-    PORTB |= (1 << PB1); 
+    PORTB = (PORTB & 0xF0) | 0x02;    
 
     lcd_trigger();
-
     _delay_ms(LCD_LONG_INSTR_DELAY);
 }
 
@@ -105,20 +99,12 @@ void entry_mode_set() {
 
     //RW is wired to gnd 
 
-    PORTB &= ~(1 << PB0);
-    PORTB &= ~(1 << PB1);
-    PORTB &= ~(1 << PB2);
-    PORTB &= ~(1 << PB3);
-
+    PORTB = PORTB & 0xF0;
     lcd_trigger();
 
-    PORTB &= ~(1 << PB3);
-    PORTB |=  (1 << PB2); 
-    PORTB |= (1 << PB1); 
-    PORTB &= ~(1 << PB0);
+    PORTB = (PORTB & 0xF0) | 0x6;
 
     lcd_trigger();
-
     _delay_us(40); // 37µs execution time from datasheet
 }
 
@@ -127,27 +113,20 @@ void Display_on_off_control() {
 
     //RW is wired to gnd 
 
-    PORTB &= ~(1 << PB0);
-    PORTB &= ~(1 << PB1);
-    PORTB &= ~(1 << PB2);
-    PORTB &= ~(1 << PB3);
-
-    lcd_trigger();
-
-    PORTB |=  (1 << PB3); // Identifier
-    PORTB |=  (1 << PB2); // Display ON
-    PORTB &= ~(1 << PB1); // Cursor OFF
-    PORTB &= ~(1 << PB0); // Blink OFF
+    PORTB = PORTB & 0xF0;
     lcd_trigger();
     
+    PORTB = (PORTB & 0xF0) | 0xC;
+
+    lcd_trigger();
     _delay_us(40); // Standard execution delay
 }
 
 void lcd_trigger() {
     PORTD |= (1 << PD2); 
     _delay_us(1);
-    PORTD &= ~(1 << PD2); 
 
+    PORTD &= ~(1 << PD2); 
     _delay_ms(LCD_LONG_INSTR_DELAY);
 }
 
@@ -158,23 +137,37 @@ void init_4_bit_lcd() {
     //RW is in gnd
 
     for (int i = 0; i < 3; i++) {
-
-    //DB5-4 set 1
-    PORTB &= ~(1 << PB3);
-    PORTB &= ~(1 << PB2);
-
-    //DB7-DB6 set 0
-    PORTB |= (1 << PB1); 
-    PORTB |= (1 << PB0); 
-
-    lcd_trigger();
+        PORTB = (PORTB & 0xF0) | 0x3;
+        lcd_trigger();
     }
 
-    PORTB &= ~(1 << PB0); // Make the last bit 0
-    PORTB |=  (1 << PB1); // Ensure this bit is 1
+    PORTB = (PORTB & 0xF0) | 0x2;
+    lcd_trigger();
+    _delay_us(100);
+}
+
+void lcd_write_char(char letter) {
+    PORTD |= (1 << PD4);
+
+    PORTB = (PORTB & 0xF0) | ((letter >> 4) & 0x0F);
     lcd_trigger();
 
-    _delay_us(100);
+    PORTB = (PORTB & 0xF0) | (letter & 0x0F);
+    lcd_trigger();
+
+    _delay_us(50); 
+}
+
+void lcd_shift_right() {
+    PORTD &= ~(1 << PD4);
+
+    //RW is wired to gnd 
+
+    PORTB = (PORTB & 0xF0) | 0x1;
+    lcd_trigger();
+
+    PORTB = (PORTB & 0xF0) | 0xC;
+    lcd_trigger();
 }
 
 short init_GPIO(volatile uint8_t* ddr, uint8_t pin) {
@@ -186,15 +179,3 @@ short init_GPIO(volatile uint8_t* ddr, uint8_t pin) {
         return ERR;
     }
 } 
-
-void lcd_write_char(char letter) {
-    PORTD |= (1 << PD4);
-
-    PORTB = (PORTB & 0xF0) | ((letter >> 4) & 0x0F);
-    lcd_trigger();
-
-    PORTB = (PORTB & 0xF0) | (letter & 0x0F);
-    lcd_trigger();
-
-    _delay_us(50); /
-}
