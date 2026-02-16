@@ -12,7 +12,7 @@ void Display_on_off_control();
 void lcd_write_char(char letter);
 void lcd_newline();
 void lcd_write_char(char letter);
-void lcd_shift_right();
+void lcd_shift_left();
 
 #define OK 0
 #define ERR 1
@@ -56,7 +56,7 @@ int main(void) {
 
 
     while (1) {
-        lcd_shift_right();
+        lcd_shift_left();
         _delay_ms(500); 
     }
 
@@ -158,7 +158,7 @@ void lcd_write_char(char letter) {
     _delay_us(50); 
 }
 
-void lcd_shift_right() {
+void lcd_shift_left() {
     PORTD &= ~(1 << PD4);
 
     //RW is wired to gnd 
@@ -166,7 +166,7 @@ void lcd_shift_right() {
     PORTB = (PORTB & 0xF0) | 0x1;
     lcd_trigger();
 
-    PORTB = (PORTB & 0xF0) | 0xC;
+    PORTB = (PORTB & 0xF0) | 0x8;
     lcd_trigger();
 }
 
